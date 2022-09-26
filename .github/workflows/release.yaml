@@ -76,7 +76,7 @@ jobs:
       # if linux or macos
       - name: Strip and rename binary
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        run: strip target/release/${{ env.APP_NAME }} && mv target/release/${{ env.APP_NAME }} target/release/{{ matrix.filename }}
+        run: strip target/release/${{ env.APP_NAME }} && mv target/release/${{ env.APP_NAME }} target/release/${{ matrix.filename }}
       # end if
 
       - name: Upload release assets
