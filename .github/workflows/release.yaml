@@ -85,6 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_name: target/release/${{ matrix.filename }}
+          asset_name: ${{ matrix.filename }}
           asset_path: target/release/${{ matrix.filename }}
           asset_content_type: application/octet-stream
