@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags: 
+      - 'v*'
+
+jobs:
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    # Note this. We are going to use that in further jobs.
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+  release_assets:
+    name: Release assets
+    needs: create_release # we need to know the upload URL
+
+    strategy:
+      matrix:
+        os: ['ubuntu-latest', 'windows-latest', 'macos-latest']
+
+        include:
+        - os: ubuntu-latest
+          filename: ideckia_client_linux
+
+        - os: windows-latest
+          filename: ideckia_client.exe
+
+        - os: macos-latest
+          filename: ideckia_client_darwin
+
+    env:
+      APP_NAME: ideckia_client
+    
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      # if linux or windows
+      - name: Install latest rust toolchain for linux or windows
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          override: true
+      # else
+      - name: Install latest rust toolchain for macos
+        if: matrix.os == 'macos-latest'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+          default: true
+          override: true
+      # end if
+
+      - name: Build
+        run: cargo build --release
+
+      # if linux or macos
+      - name: Strip and rename binary
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: strip target/release/${{ env.APP_NAME }} && mv target/release/${{ env.APP_NAME }} target/release/{{ matrix.filename }}
+      # end if
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_name: target/release/${{ matrix.filename }}
+          asset_path: target/release/${{ matrix.filename }}
+          asset_content_type: application/octet-stream
