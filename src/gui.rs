@@ -105,7 +105,7 @@ impl eframe::App for GUI {
                 );
             });
 
-            let width = ui.available_width() - 20.;
+            let width = ui.available_width() - 25.;
             let height = ui.available_height() - 10.;
 
             Grid::new("layout").show(ui, |ui| unsafe {
