@@ -9,7 +9,7 @@ pub struct WebSocketClient {
 impl WebSocketClient {
     pub fn connect() {
         thread::spawn(move || {
-            connect("ws://localhost:8888", |out| WebSocketClient { out }).unwrap()
+            connect(format!("ws://localhost:{}", std::env::args().nth(1).unwrap_or("8888".to_string())), |out| WebSocketClient { out }).unwrap()
         });
     }
 }

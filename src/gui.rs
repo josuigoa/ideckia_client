@@ -1,4 +1,4 @@
-use egui::{Color32, Grid, Response, Ui};
+use egui::{Color32, Grid, Ui};
 use serde_json::Value;
 use std::{thread, time::Duration};
 use ws::Sender;
@@ -17,15 +17,15 @@ impl GUI {
     pub fn new(_: &eframe::CreationContext<'_>) -> Self {
         GUI {
             delayed: false,
-            callback_delay_sec: 0,
+            callback_delay_sec: 2,
         }
     }
 
-    pub fn button(ui: &mut Ui, item: &ItemState) -> Response {
-        Self::sized_button(ui, item, 120., 120.)
+    pub fn button(&self, ui: &mut Ui, item: &ItemState) {
+        self.sized_button(ui, item, 120., 120.)
     }
 
-    pub fn sized_button(ui: &mut Ui, item: &ItemState, width: f32, height: f32) -> Response {
+    pub fn sized_button(&self, ui: &mut Ui, item: &ItemState, width: f32, height: f32) {
         let text = &item.text;
         let len = text.len();
         let s = if len <= 1 || text == "null" {
@@ -34,13 +34,18 @@ impl GUI {
             &text.as_str()[1..len - 1]
         };
 
-        ui.add_sized(
+        let button = ui.add_sized(
             [width, height],
             egui::Button::new(s).wrap(true).stroke(egui::Stroke::new(
                 2.,
                 Color32::from_rgb(item.bg_color.r, item.bg_color.g, item.bg_color.b),
             )),
-        )
+        );
+        if button.clicked() {
+            self.send_click(item.id, false);
+        } else if button.secondary_clicked() {
+            self.send_click(item.id, true);
+        }
     }
 
     pub fn set_sender(out: &Sender) {
@@ -51,16 +56,17 @@ impl GUI {
         unsafe { LAYOUT = Some(IdeckiaLayout::new(layout_data)) };
     }
 
-    pub fn send_click(&self, item_id: i64) {
+    pub fn send_click(&self, item_id: i64, is_long: bool) {
         if self.delayed {
             thread::sleep(Duration::from_secs(self.callback_delay_sec));
         }
         unsafe {
             match &SENDER {
                 Some(sender) => {
+                    let click_type = if is_long { "longPress" } else { "click" };
                     let json = format!(
-                        "{{ \"type\": \"click\", \"whoami\": \"client\", \"itemId\": {} }}",
-                        item_id
+                        "{{ \"type\": \"{}\", \"whoami\": \"client\", \"itemId\": {} }}",
+                        click_type, item_id
                     );
                     sender
                         .send(json)
@@ -75,17 +81,13 @@ impl GUI {
 impl eframe::App for GUI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::SidePanel::right("fixed_items").show(ctx, |ui| unsafe {
-            let button_size = ui.available_width() - 10.;
+            let button_size = ui.available_width() - 15.;
             match &LAYOUT {
                 Some(layout) => {
                     if layout.fixed_items.len() > 0 {
                         egui::ScrollArea::vertical().show(ui, |ui| {
                             for fixed_item in layout.fixed_items.iter() {
-                                if GUI::sized_button(ui, &fixed_item, button_size, button_size)
-                                    .clicked()
-                                {
-                                    self.send_click(fixed_item.id);
-                                }
+                                self.sized_button(ui, &fixed_item, button_size, button_size);
                             }
                         });
                     }
@@ -116,9 +118,7 @@ impl eframe::App for GUI {
                         let mut index = 0;
 
                         for item in layout.items.iter() {
-                            if GUI::sized_button(ui, &item, width, height).clicked() {
-                                self.send_click(item.id);
-                            }
+                            self.sized_button(ui, &item, width, height);
 
                             index += 1;
 
@@ -139,7 +139,7 @@ impl eframe::App for GUI {
         true
     }
 
-    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {}
+    fn on_exit(&mut self) {}
 
     fn auto_save_interval(&self) -> std::time::Duration {
         std::time::Duration::from_secs(30)

@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use image::io::Reader as ImageReader;
 use std::io::Cursor;
 
@@ -7,6 +9,7 @@ fn main() {
     ideckia_client::websocket_client::WebSocketClient::connect();
 
     let mut native_options = eframe::NativeOptions {
+        renderer: eframe::Renderer::Wgpu,
         ..Default::default()
     };
 
