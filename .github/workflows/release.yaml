@@ -34,13 +34,16 @@ jobs:
 
         include:
         - os: ubuntu-latest
-          filename: ideckia_client_linux
+          built_filename: ideckia_client
+          final_filename: ideckia_client_linux
 
         - os: windows-latest
-          filename: ideckia_client.exe
+          built_filename: ideckia_client.exe
+          final_filename: ideckia_client.exe
 
         - os: macos-latest
-          filename: ideckia_client_darwin
+          built_filename: ideckia_client
+          final_filename: ideckia_client_darwin
 
     env:
       APP_NAME: ideckia_client
@@ -91,7 +94,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p target/release
-          mv target/x86_64-unknown-linux-gnu/release/${{ matrix.filename }} target/release/
+          mv target/x86_64-unknown-linux-gnu/release/${{ matrix.built_filename }} target/release/${{ matrix.final_filename }}
       # end
 
       - name: Upload release assets
@@ -100,6 +103,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_name: ${{ matrix.filename }}
-          asset_path: target/release/${{ matrix.filename }}
+          asset_name: ${{ matrix.final_filename }}
+          asset_path: target/release/${{ matrix.built_filename }}
           asset_content_type: application/octet-stream
