@@ -76,6 +76,21 @@ impl GUI {
             }
         }
     }
+
+    pub fn goto_dir(&self, to_dir: String) {
+        unsafe {
+            match &SENDER {
+                Some(sender) => {
+                    let json = format!(
+                        "{{ \"type\": \"gotoDir\", \"whoami\": \"client\", \"toDir\": {} }}",
+                        to_dir
+                    );
+                    sender.send(json).expect("Error sending gotoDir to server");
+                }
+                None => {}
+            }
+        }
+    }
 }
 
 impl eframe::App for GUI {
@@ -105,6 +120,12 @@ impl eframe::App for GUI {
                     self.delayed,
                     egui::Slider::new(&mut self.callback_delay_sec, 1..=10).text("seconds"),
                 );
+                if ui.button("prev_dir").clicked() {
+                    self.goto_dir("prev".to_string());
+                }
+                if ui.button("main_dir").clicked() {
+                    self.goto_dir("main".to_string());
+                }
             });
 
             let width = ui.available_width() - 25.;
