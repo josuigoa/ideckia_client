@@ -1009,7 +1009,7 @@ checksum = "d897f394bad6a705d5f4104762e116a75639e470d80901eed05a860a95cb1904"
 
 [[package]]
 name = "ideckia_client"
-version = "0.1.0"
+version = "0.0.6"
 dependencies = [
  "eframe",
  "egui",
