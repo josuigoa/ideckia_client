@@ -82,7 +82,7 @@ impl GUI {
             match &SENDER {
                 Some(sender) => {
                     let json = format!(
-                        "{{ \"type\": \"gotoDir\", \"whoami\": \"client\", \"toDir\": {} }}",
+                        "{{ \"type\": \"gotoDir\", \"whoami\": \"client\", \"toDir\": \"{}\" }}",
                         to_dir
                     );
                     sender.send(json).expect("Error sending gotoDir to server");
