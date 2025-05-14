@@ -36,7 +36,7 @@ impl GUI {
 
         let button = ui.add_sized(
             [width, height],
-            egui::Button::new(s).wrap(true).stroke(egui::Stroke::new(
+            egui::Button::new(s).wrap().stroke(egui::Stroke::new(
                 2.,
                 Color32::from_rgb(item.bg_color.r, item.bg_color.g, item.bg_color.b),
             )),
@@ -96,7 +96,7 @@ impl GUI {
 impl eframe::App for GUI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::SidePanel::right("fixed_items").show(ctx, |ui| unsafe {
-            let button_size = ui.available_width() - 15.;
+            let button_size = ui.available_width() - 10.;
             match &LAYOUT {
                 Some(layout) => {
                     if layout.fixed_items.len() > 0 {
@@ -156,40 +156,9 @@ impl eframe::App for GUI {
 
     fn save(&mut self, _storage: &mut dyn eframe::Storage) {}
 
-    fn on_close_event(&mut self) -> bool {
-        true
-    }
-
     fn on_exit(&mut self) {}
 
     fn auto_save_interval(&self) -> std::time::Duration {
         std::time::Duration::from_secs(30)
     }
-
-    fn max_size_points(&self) -> egui::Vec2 {
-        egui::Vec2::INFINITY
-    }
-
-    fn clear_color(&self, _visuals: &egui::Visuals) -> egui::Rgba {
-        // NOTE: a bright gray makes the shadows of the windows look weird.
-        // We use a bit of transparency so that if the user switches on the
-        // `transparent()` option they get immediate results.
-        egui::Color32::from_rgba_unmultiplied(12, 12, 12, 180).into()
-
-        // _visuals.window_fill() would also be a natural choice
-    }
-
-    fn persist_native_window(&self) -> bool {
-        true
-    }
-
-    fn persist_egui_memory(&self) -> bool {
-        true
-    }
-
-    fn warm_up_enabled(&self) -> bool {
-        false
-    }
-
-    fn post_rendering(&mut self, _window_size_px: [u32; 2], _frame: &eframe::Frame) {}
 }

@@ -2,6 +2,7 @@
 
 use image::io::Reader as ImageReader;
 use std::io::Cursor;
+use std::sync::Arc;
 
 fn main() {
     tracing_subscriber::fmt::init();
@@ -13,17 +14,19 @@ fn main() {
         ..Default::default()
     };
 
-    native_options.icon_data = get_icon_data();
+    native_options.viewport.icon = get_icon_data();
 
-    eframe::run_native(
+    let _ = eframe::run_native(
         "ideckia client",
         native_options,
-        Box::new(|cc| Box::new(ideckia_client::GUI::new(cc))),
+        Box::new(|cc| {
+            Ok(Box::new(ideckia_client::GUI::new(cc)))
+        }),
     );
 }
 
-fn get_icon_data() -> Option<eframe::IconData> {
-    let icon_bytes = include_bytes!("../icon.ico");
+fn get_icon_data() -> Option<Arc<egui::IconData>> {
+    let icon_bytes = include_bytes!("../icon_mini.png");
     let icon = match ImageReader::new(Cursor::new(icon_bytes)).with_guessed_format() {
         Ok(r) => match r.decode() {
             Ok(d) => d,
@@ -40,9 +43,9 @@ fn get_icon_data() -> Option<eframe::IconData> {
 
     let icon = icon.to_rgba8();
     let (icon_width, icon_height) = icon.dimensions();
-    Some(eframe::IconData {
+    Some(Arc::new(egui::IconData {
         rgba: icon.into_raw(),
         width: icon_width,
         height: icon_height,
-    })
+    }))
 }
